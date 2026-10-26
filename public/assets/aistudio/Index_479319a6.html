@@ -1,0 +1,145 @@
+function renderGroupedMaterials() {
+      const c = document.getElementById('materials-container');
+      if (!c) return;
+      const role = String(currentUser.role || '').trim().toUpperCase();
+      const materials = appData.materials || [];
+
+      // JIKA GURU / ADMIN: Dikelompokkan berdasarkan Mapel
+      if (role === 'GURU' || role === 'ADMIN') {
+        const subjects = appData.subjects || [];
+        if (subjects.length === 0) {
+          c.innerHTML = '<div class="pixel-box p-4 text-center text-xs text-slate-500">Tidak ada mata pelajaran yang tersedia.</div>';
+          return;
+        }
+
+        c.innerHTML = subjects.map((subj, idx) => {
+          const subjMaterials = materials.filter(m => String(m.subject_id) === String(subj.id));
+          const groupId = `mat-group-${idx}`;
+          
+          return `
+            <div class="pixel-box bg-white overflow-hidden border-4 border-black shadow-pixel">
+              <div onclick="toggleGroup('${groupId}')" class="p-3 bg-pixelYellow border-b-4 border-black flex justify-between items-center cursor-pointer hover:bg-yellow-300">
+                <span class="font-pixel text-xs text-black">📘 MAPEL: ${escapeHtml(subj.subject_name)} (${subjMaterials.length})</span>
+                <span class="font-pixel text-xs text-black">▼</span>
+              </div>
+              <div id="${groupId}" class="p-3 space-y-3">
+                ${subjMaterials.length === 0 ? '<p class="text-xs text-slate-500 italic p-2">Belum ada materi untuk mata pelajaran ini.</p>' : subjMaterials.map(m => `
+                  <div class="p-3 bg-slate-50 border-2 border-black space-y-2">
+                    <h4 class="text-xs font-pixel text-slate-900">${escapeHtml(m.title)}</h4>
+                    ${m.url ? `<a href="${escapeHtml(m.url)}" target="_blank" class="pixel-btn bg-pixelBlue text-white text-center py-1.5 text-[9px] block">BUKA TAUTAN MATERI 🔗</a>` : ''}
+                  </div>
+                `).join('')}
+              </div>
+            </div>
+          `;
+        }).join('');
+      } 
+      // JIKA SISWA: Dikelompokkan berdasarkan Kelas yang diikuti
+      else {
+        const classes = appData.classes || [];
+        if (classes.length === 0) {
+          c.innerHTML = '<div class="pixel-box p-4 text-center text-xs text-slate-500">Tidak ada kelas yang diikuti.</div>';
+          return;
+        }
+
+        c.innerHTML = classes.map((cls, idx) => {
+          const clsMaterials = materials.filter(m => {
+            const raw = String(m.class_id || '').trim();
+            if (!raw || raw === 'ALL') return true;
+            return raw.split(',').map(x => x.trim()).includes(String(cls.id));
+          });
+          const groupId = `mat-class-group-${idx}`;
+
+          return `
+            <div class="pixel-box bg-white overflow-hidden border-4 border-black shadow-pixel">
+              <div onclick="toggleGroup('${groupId}')" class="p-3 bg-pixelYellow border-b-4 border-black flex justify-between items-center cursor-pointer hover:bg-yellow-300">
+                <span class="font-pixel text-xs text-black">🏫 KELAS: ${escapeHtml(cls.class_name)} (${clsMaterials.length})</span>
+                <span class="font-pixel text-xs text-black">▼</span>
+              </div>
+              <div id="${groupId}" class="p-3 space-y-3">
+                ${clsMaterials.length === 0 ? '<p class="text-xs text-slate-500 italic p-2">Belum ada materi untuk kelas ini.</p>' : clsMaterials.map(m => `
+                  <div class="p-3 bg-slate-50 border-2 border-black space-y-2">
+                    <h4 class="text-xs font-pixel text-slate-900">${escapeHtml(m.title)}</h4>
+                    ${m.url ? `<a href="${escapeHtml(m.url)}" target="_blank" class="pixel-btn bg-pixelBlue text-white text-center py-1.5 text-[9px] block">BUKA TAUTAN MATERI 🔗</a>` : ''}
+                  </div>
+                `).join('')}
+              </div>
+            </div>
+          `;
+        }).join('');
+      }
+    }
+
+    function renderGroupedAssignments() {
+      const c = document.getElementById('assignments-container');
+      if (!c) return;
+      const role = String(currentUser.role || '').trim().toUpperCase();
+      const assignments = appData.assignments || [];
+
+      // JIKA GURU / ADMIN: Dikelompokkan berdasarkan Mapel
+      if (role === 'GURU' || role === 'ADMIN') {
+        const subjects = appData.subjects || [];
+        if (subjects.length === 0) {
+          c.innerHTML = '<div class="pixel-box p-4 text-center text-xs text-slate-500">Tidak ada mata pelajaran yang tersedia.</div>';
+          return;
+        }
+
+        c.innerHTML = subjects.map((subj, idx) => {
+          const subjAssignments = assignments.filter(a => String(a.subject_id) === String(subj.id));
+          const groupId = `asg-group-${idx}`;
+
+          return `
+            <div class="pixel-box bg-white overflow-hidden border-4 border-black shadow-pixel">
+              <div onclick="toggleGroup('${groupId}')" class="p-3 bg-pixelMint border-b-4 border-black flex justify-between items-center cursor-pointer hover:bg-emerald-600 text-white">
+                <span class="font-pixel text-xs">📝 MAPEL: ${escapeHtml(subj.subject_name)} (${subjAssignments.length})</span>
+                <span class="font-pixel text-xs">▼</span>
+              </div>
+              <div id="${groupId}" class="p-3 space-y-3">
+                ${subjAssignments.length === 0 ? '<p class="text-xs text-slate-500 italic p-2">Belum ada tugas untuk mata pelajaran ini.</p>' : subjAssignments.map(as => `
+                  <div class="p-3 bg-slate-50 border-2 border-black space-y-2">
+                    <h4 class="text-xs font-pixel text-slate-900">${escapeHtml(as.title)}</h4>
+                    <p class="text-base font-retro text-slate-700">${escapeHtml(as.description)}</p>
+                    <div class="text-[9px] font-pixel text-amber-700">DEADLINE: ${as.due_date ? new Date(as.due_date).toLocaleDateString('id-ID') : '-'}</div>
+                  </div>
+                `).join('')}
+              </div>
+            </div>
+          `;
+        }).join('');
+      } 
+      // JIKA SISWA: Dikelompokkan berdasarkan Kelas yang diikuti
+      else {
+        const classes = appData.classes || [];
+        if (classes.length === 0) {
+          c.innerHTML = '<div class="pixel-box p-4 text-center text-xs text-slate-500">Tidak ada kelas yang diikuti.</div>';
+          return;
+        }
+
+        c.innerHTML = classes.map((cls, idx) => {
+          const clsAssignments = assignments.filter(a => {
+            const raw = String(a.class_id || '').trim();
+            if (!raw || raw === 'ALL') return true;
+            return raw.split(',').map(x => x.trim()).includes(String(cls.id));
+          });
+          const groupId = `asg-class-group-${idx}`;
+
+          return `
+            <div class="pixel-box bg-white overflow-hidden border-4 border-black shadow-pixel">
+              <div onclick="toggleGroup('${groupId}')" class="p-3 bg-pixelMint border-b-4 border-black flex justify-between items-center cursor-pointer hover:bg-emerald-600 text-white">
+                <span class="font-pixel text-xs">🏫 KELAS: ${escapeHtml(cls.class_name)} (${clsAssignments.length})</span>
+                <span class="font-pixel text-xs">▼</span>
+              </div>
+              <div id="${groupId}" class="p-3 space-y-3">
+                ${clsAssignments.length === 0 ? '<p class="text-xs text-slate-500 italic p-2">Belum ada tugas untuk kelas ini.</p>' : clsAssignments.map(as => `
+                  <div class="p-3 bg-slate-50 border-2 border-black space-y-2">
+                    <h4 class="text-xs font-pixel text-slate-900">${escapeHtml(as.title)}</h4>
+                    <p class="text-base font-retro text-slate-700">${escapeHtml(as.description)}</p>
+                    <div class="text-[9px] font-pixel text-amber-700">DEADLINE: ${as.due_date ? new Date(as.due_date).toLocaleDateString('id-ID') : '-'}</div>
+                  </div>
+                `).join('')}
+              </div>
+            </div>
+          `;
+        }).join('');
+      }
+    }

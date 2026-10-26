@@ -1,0 +1,6 @@
+{
+  "name": "Edubits - LMS Pixel Hub & JWT Auth",
+  "description": "Platform pembelajaran daring Edubits dengan sistem autentikasi JWT, hak akses Guru (Admin) dan Siswa, manajemen kelas, materi, tugas, dan penilaian.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
